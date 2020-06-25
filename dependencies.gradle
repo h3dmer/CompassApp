@@ -1,0 +1,51 @@
+
+ext.versions = [
+
+        minSdk                  : 21,
+        compileSdk              : 29,
+        versionCode             : 1,
+        versionName             : '1.0.0',
+
+        // gradle plugins
+        gradleBuildTool         : '4.0.0',
+        spotlessGradle          : '4.3.0',
+        versionPlugin           : '0.28.0',
+
+        // kotlin
+        kotlin                  : '1.3.72',
+
+        // support library
+        materialVersion         : '1.2.0-alpha06',
+        constraintVersion       : '1.1.3',
+        gmsPlayServiceVersion   : '17.0.0',
+
+        // architecture components
+        fragmentVersion         : '1.2.4',
+        lifecycleVersion        : '2.2.0',
+        archCompomentVersion    : '2.1.0',
+        navVersion              : '2.3.0-beta01',
+
+        // rxJava
+        rxjavaVersion           : '2.2.19',
+        rxAndroidVersion        : '2.1.1',
+        rxKotlinVersion         : '2.4.0',
+        rxLocationVersion       : '1.0.5',
+
+        // di
+        daggerVersion           : '2.27',
+
+        // debugging
+        timberVersion           : '4.7.1',
+
+        // unit test
+        truthVersion            : '1.0.1',
+        junitVersion            : '4.12',
+        robolectricVersion      : '4.3.1',
+        androidxTest            : '1.1.0',
+        androidxTestJunit       : '1.1.2-rc01',
+        androidTestRunner       : '1.3.0-beta01',
+        espressoVersion         : '3.2.0',
+        mockitoKotlinVersion    : '2.2.0',
+        mockitoInlineVersion    : '3.3.3'
+
+]
