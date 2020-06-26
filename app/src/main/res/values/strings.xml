@@ -1,9 +1,14 @@
 <resources>
     <string name="app_name">Compass</string>
-    <!-- TODO: Remove or change this placeholder text -->
+
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <string name="coords_latitude">Latitude: %s</string>
     <string name="coords_longitude">Longitude: %s</string>
+
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+    <string name="current_location">Current location</string>
+    <string name="destination_location">Destination</string>
 
 </resources>

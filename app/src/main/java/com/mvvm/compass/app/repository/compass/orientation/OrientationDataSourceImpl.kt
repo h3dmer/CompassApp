@@ -17,7 +17,6 @@ class OrientationDataSourceImpl @Inject constructor() : OrientationDataSource {
     private val alpha = 0.97f
 
     private var orientation = Orientation()
-    private var isArrowVisible = false
 
     private val mGravity = FloatArray(3)
     private val mGeomagnetic = FloatArray(3)
@@ -29,7 +28,7 @@ class OrientationDataSourceImpl @Inject constructor() : OrientationDataSource {
     private var destinationAzimuthFix = 0f
 
     private var currentLocation = GeoLocation(0.0, 0.0)
-    private var destination = GeoLocation(53.143632, 23.106598)
+    private var destination = GeoLocation(0.0, 0.0)
 
     override fun sensorChanged(event: SensorEvent?): Orientation {
         when (event?.sensor?.type) {
@@ -55,35 +54,33 @@ class OrientationDataSourceImpl @Inject constructor() : OrientationDataSource {
             mGeomagnetic
         )
         if (success) {
-            val orientation = FloatArray(3)
-            SensorManager.getOrientation(rotation, orientation)
-            azimuth = Math.toDegrees(orientation[0].toDouble()).toFloat()
+            val orientationArray = FloatArray(3)
+            SensorManager.getOrientation(rotation, orientationArray)
+            azimuth = Math.toDegrees(orientationArray[0].toDouble()).toFloat()
             azimuth = azimuth.plus(360).rem(360)
+
+            orientation.compassAzimuth = azimuth
+            orientation.compassAzimuthFix = azimuthFix
             azimuthFix = azimuth
-        }
 
-        if (destination.latitude > 0 || destination.longitude > 0) {
-            isArrowVisible = true
-            currentLocation.let { currentLocation ->
-                destinationAzimuth = azimuth.minus(
-                    bearing(
-                        currentLocation.latitude,
-                        currentLocation.longitude,
-                        destination.latitude,
-                        destination.longitude
-                    )
-                ).toFloat()
-                destinationAzimuthFix = destinationAzimuth
-            }
-        }
 
-        orientation = Orientation(
-            azimuth,
-            azimuthFix,
-            destinationAzimuth,
-            destinationAzimuthFix,
-            isArrowVisible
-        )
+            if (destination.latitude > 0 || destination.longitude > 0) {
+                orientation.isArrowVisible = true
+                currentLocation.let { currentLocation ->
+                    destinationAzimuth = azimuth.minus(
+                        bearing(
+                            currentLocation.latitude,
+                            currentLocation.longitude,
+                            destination.latitude,
+                            destination.longitude
+                        )
+                    ).toFloat()
+                    orientation.destinationAzimuth = destinationAzimuth
+                    orientation.destinationAzimuthFix = destinationAzimuthFix
+                    destinationAzimuthFix = destinationAzimuth
+                }
+            } else orientation.isArrowVisible = false
+        }
 
         return orientation
     }

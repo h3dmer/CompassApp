@@ -1,7 +1,9 @@
 package com.mvvm.compass.app.di.modules
 
 import android.content.Context
+import com.mvvm.compass.app.repository.compass.location.LocationDataSource
 import com.mvvm.compass.app.repository.compass.location.LocationDataSourceImpl
+import com.mvvm.compass.app.repository.compass.orientation.OrientationDataSource
 import com.mvvm.compass.app.repository.compass.orientation.OrientationDataSourceImpl
 import com.patloew.rxlocation.RxLocation
 import dagger.Module
@@ -20,13 +22,13 @@ class CompassModule {
 
     @Provides
     @Singleton
-    fun provideCompassLocationSource(rxLocation: RxLocation): LocationDataSourceImpl {
+    fun provideCompassLocationSource(rxLocation: RxLocation): LocationDataSource {
         return LocationDataSourceImpl(rxLocation)
     }
 
     @Provides
     @Singleton
-    fun provideCompassOrientationSource(): OrientationDataSourceImpl {
+    fun provideCompassOrientationSource(): OrientationDataSource {
         return OrientationDataSourceImpl()
     }
 }

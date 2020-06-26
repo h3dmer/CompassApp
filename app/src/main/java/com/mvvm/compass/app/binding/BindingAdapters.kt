@@ -22,7 +22,7 @@ fun animateCompass(target: ImageView, azimuth: Float, currentAzimuth: Float) {
         Animation.RELATIVE_TO_SELF,
         0.5f
     ).apply {
-        duration = 300
+        duration = 500
         repeatCount = 0
         fillAfter = true
     }

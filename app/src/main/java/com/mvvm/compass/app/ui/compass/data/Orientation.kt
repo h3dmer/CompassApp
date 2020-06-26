@@ -1,9 +1,9 @@
 package com.mvvm.compass.app.ui.compass.data
 
 data class Orientation(
-    val compassAzumith: Float = 0f,
-    val compassAzumithFix: Float = 0f,
-    val destinationAzumith: Float = 0f,
-    val destinationAzumithFix: Float = 0f,
-    val isArrowVisible: Boolean = false
+    var destinationAzimuth: Float = 0f,
+    var destinationAzimuthFix: Float = 0f,
+    var compassAzimuth: Float = 0f,
+    var compassAzimuthFix: Float = 0f,
+    var isArrowVisible: Boolean = false
 )

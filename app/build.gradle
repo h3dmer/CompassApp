@@ -88,6 +88,9 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     testImplementation "androidx.arch.core:core-testing:$versions.archCompomentVersion"
 
+    implementation 'com.afollestad.material-dialogs:core:3.3.0'
+    implementation 'com.afollestad.material-dialogs:lifecycle:3.3.0'
+    implementation 'com.afollestad.material-dialogs:input:3.3.0'
 
     //RxJava
     implementation "io.reactivex.rxjava2:rxjava:$versions.rxjavaVersion"
