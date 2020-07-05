@@ -14,6 +14,11 @@ import com.mvvm.compass.app.repository.compass.CompassRepository
 import com.mvvm.compass.app.ui.compass.data.GeoLocation
 import com.mvvm.compass.app.ui.compass.data.Orientation
 import com.mvvm.compass.app.utils.Event
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.rxkotlin.addTo
+import io.reactivex.schedulers.Schedulers
+import timber.log.Timber
 import javax.inject.Inject
 
 class CompassViewModel @Inject constructor(
@@ -22,12 +27,10 @@ class CompassViewModel @Inject constructor(
 ) : AndroidViewModel(application), SensorEventListener {
 
     private lateinit var sensorManager: SensorManager
+    private var compositeDisposable = CompositeDisposable()
 
     private var _orientation = MutableLiveData<Orientation>()
     var orientation: LiveData<Orientation> = _orientation
-
-    val currentLocation =
-        LiveDataReactiveStreams.fromPublisher(compassRepository.getCurrentLocation())
 
     private val _setDestinationLatitude = MutableLiveData<Event<String>>()
     val setDestinationLatitude: LiveData<Event<String>> get() = _setDestinationLatitude
@@ -36,6 +39,7 @@ class CompassViewModel @Inject constructor(
     val setDestinationLongitude: LiveData<Event<String>> get() = _setDestinationLongitude
 
 
+    val currentLocation = LiveDataReactiveStreams.fromPublisher(compassRepository.getCurrentLocation())
     val destinationLatitude = MutableLiveData<Double>()
     val destinationLongitude = MutableLiveData<Double>()
 
@@ -67,7 +71,13 @@ class CompassViewModel @Inject constructor(
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     override fun onSensorChanged(event: SensorEvent?) {
-        _orientation.value = compassRepository.sensorChanged(event)
+        compassRepository.sensorChanged(event)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { _orientation.value = it },
+                { Timber.d(it) }
+            ).addTo(compositeDisposable)
     }
 
     fun initDialog(dialogTitle: String, option: Int) {
@@ -98,6 +108,7 @@ class CompassViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         unregisterSensor()
+        compositeDisposable.clear()
     }
 
     companion object {

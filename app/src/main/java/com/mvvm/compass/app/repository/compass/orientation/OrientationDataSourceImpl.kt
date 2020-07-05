@@ -5,6 +5,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorManager
 import com.mvvm.compass.app.ui.compass.data.GeoLocation
 import com.mvvm.compass.app.ui.compass.data.Orientation
+import io.reactivex.Observable
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.atan2
@@ -30,7 +31,31 @@ class OrientationDataSourceImpl @Inject constructor() : OrientationDataSource {
     private var currentLocation = GeoLocation(0.0, 0.0)
     private var destination = GeoLocation(0.0, 0.0)
 
-    override fun sensorChanged(event: SensorEvent?): Orientation {
+    override fun sensorChanged(event: SensorEvent?): Observable<Orientation> {
+        return calculateCompassRotation(event)
+    }
+
+    private fun calculateCompassRotation(event: SensorEvent?): Observable<Orientation> {
+        calculateSensorValues(event)
+
+        val rotation = FloatArray(9)
+        val success = SensorManager.getRotationMatrix(
+            rotation,
+            null,
+            mGravity,
+            mGeomagnetic
+        )
+        if (success) {
+            calculateCompassRotationAzimuth(rotation)
+            if (destination.latitude > 0 || destination.longitude > 0) {
+                calculateBearingValues()
+            } else { orientation.isArrowVisible = false }
+        }
+
+        return Observable.just(orientation)
+    }
+
+    private fun calculateSensorValues(event: SensorEvent?) {
         when (event?.sensor?.type) {
             Sensor.TYPE_ACCELEROMETER -> {
                 mGravity[0] = alpha * mGravity[0] + (1 - alpha) * event.values[0]
@@ -44,45 +69,33 @@ class OrientationDataSourceImpl @Inject constructor() : OrientationDataSource {
                 mGeomagnetic[2] = alpha * mGeomagnetic[2] + (1 - alpha) * event.values[2]
             }
         }
+    }
 
-        val rotation = FloatArray(9)
+    private fun calculateCompassRotationAzimuth(rotation: FloatArray) {
+        val orientationArray = FloatArray(3)
+        SensorManager.getOrientation(rotation, orientationArray)
+        azimuth = Math.toDegrees(orientationArray[0].toDouble()).toFloat()
+        azimuth = azimuth.plus(360).rem(360)
+        orientation.compassAzimuth = azimuth
+        orientation.compassAzimuthFix = azimuthFix
+        azimuthFix = azimuth
+    }
 
-        val success = SensorManager.getRotationMatrix(
-            rotation,
-            null,
-            mGravity,
-            mGeomagnetic
-        )
-        if (success) {
-            val orientationArray = FloatArray(3)
-            SensorManager.getOrientation(rotation, orientationArray)
-            azimuth = Math.toDegrees(orientationArray[0].toDouble()).toFloat()
-            azimuth = azimuth.plus(360).rem(360)
-
-            orientation.compassAzimuth = azimuth
-            orientation.compassAzimuthFix = azimuthFix
-            azimuthFix = azimuth
-
-
-            if (destination.latitude > 0 || destination.longitude > 0) {
-                orientation.isArrowVisible = true
-                currentLocation.let { currentLocation ->
-                    destinationAzimuth = azimuth.minus(
-                        bearing(
-                            currentLocation.latitude,
-                            currentLocation.longitude,
-                            destination.latitude,
-                            destination.longitude
-                        )
-                    ).toFloat()
-                    orientation.destinationAzimuth = destinationAzimuth
-                    orientation.destinationAzimuthFix = destinationAzimuthFix
-                    destinationAzimuthFix = destinationAzimuth
-                }
-            } else orientation.isArrowVisible = false
+    private fun calculateBearingValues() {
+        orientation.isArrowVisible = true
+        currentLocation.let { currentLocation ->
+            destinationAzimuth = azimuth.minus(
+                bearing(
+                    currentLocation.latitude,
+                    currentLocation.longitude,
+                    destination.latitude,
+                    destination.longitude
+                )
+            ).toFloat()
+            orientation.destinationAzimuth = destinationAzimuth
+            orientation.destinationAzimuthFix = destinationAzimuthFix
+            destinationAzimuthFix = destinationAzimuth
         }
-
-        return orientation
     }
 
     override fun updateCurrentLocation(geoLocation: GeoLocation) {

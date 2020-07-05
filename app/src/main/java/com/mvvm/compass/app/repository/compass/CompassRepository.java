@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import io.reactivex.Flowable;
+import io.reactivex.Observable;
 
 @Singleton
 public class CompassRepository implements LocationDataSource, OrientationDataSource {
@@ -40,7 +41,7 @@ public class CompassRepository implements LocationDataSource, OrientationDataSou
 
     @NotNull
     @Override
-    public Orientation sensorChanged(@Nullable SensorEvent event) {
+    public Observable<Orientation> sensorChanged(@Nullable SensorEvent event) {
         return mOrientationDataSource.sensorChanged(event);
     }
 

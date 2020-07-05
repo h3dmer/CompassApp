@@ -6,15 +6,18 @@ import com.mvvm.compass.app.repository.compass.location.LocationDataSource
 import com.mvvm.compass.app.repository.compass.orientation.OrientationDataSource
 import com.mvvm.compass.app.ui.compass.data.GeoLocation
 import com.mvvm.compass.app.ui.compass.data.Orientation
+import com.nhaarman.mockitokotlin2.*
 import io.reactivex.Flowable
-import org.junit.Assert
+import io.reactivex.Observable
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.*
+import org.junit.runner.RunWith
 import org.mockito.MockitoAnnotations
+import org.mockito.junit.MockitoJUnitRunner
 
-
+@RunWith(MockitoJUnitRunner::class)
 class CompassRepositoryTest {
 
     @get:Rule
@@ -22,9 +25,10 @@ class CompassRepositoryTest {
 
     private lateinit var compassRepository: CompassRepository
 
-    private val locationDataSource = mock(LocationDataSource::class.java)
+    private val locationDataSource: LocationDataSource = mock()
 
-    private val orientationDataSource = mock(OrientationDataSource::class.java)
+    private val orientationDataSource: OrientationDataSource = mock()
+
 
     @Before
     fun init() {
@@ -32,47 +36,55 @@ class CompassRepositoryTest {
         compassRepository = CompassRepository(locationDataSource, orientationDataSource)
     }
 
+    @After
+    fun validate() {
+        validateMockitoUsage()
+    }
+
     @Test
     fun test_get_current_location_success() {
         val data = GeoLocation(1.0, 1.0)
+        reset(locationDataSource)
 
-        `when`(locationDataSource.getCurrentLocation()).thenReturn(Flowable.just(
-            data
-        ))
+        whenever(locationDataSource.getCurrentLocation()).thenReturn(
+            Flowable.just(
+                data
+            )
+        )
 
-        compassRepository.getCurrentLocation()
-
-        verify(locationDataSource, times(1))
+        compassRepository.getCurrentLocation().test().assertValue(data).dispose()
+        verify(locationDataSource).getCurrentLocation()
     }
 
     @Test
     fun test_when_sensorChanged_return_orientation() {
-
-        val event = mock(SensorEvent::class.java)
+        reset(orientationDataSource)
+        val event = mock<SensorEvent>()
 
         val result = Orientation(1f, 1f, 1f, 1f, false)
 
-        `when`(compassRepository.sensorChanged(event)).thenReturn(
-            Orientation(
-                1f,
-                1f,
-                1f,
-                1f,
-                false
+        whenever(orientationDataSource.sensorChanged(event)).thenReturn(
+            Observable.just(
+                result
             )
         )
 
-        Assert.assertEquals(result, compassRepository.sensorChanged(event))
+        whenever(
+            compassRepository.sensorChanged(event)
+        ).thenReturn(
+            Observable.just(result)
+        )
+
+        compassRepository.sensorChanged(event).test().assertValue(result).dispose()
+
+        verify(orientationDataSource, times(1)).sensorChanged(event)
     }
 
     @Test
     fun test_when_sensorChanged_return_wrong_value() {
-
-        val event = mock(SensorEvent::class.java)
-
-        val result = Orientation(2f, 2f, 2f, 2f, true)
-
-        `when`(compassRepository.sensorChanged(event)).thenReturn(
+        val event = mock<SensorEvent>()
+        val result = Observable.just(Orientation(2f, 2f, 2f, 2f, true))
+        val wrongValue = Observable.just(
             Orientation(
                 2f,
                 2f,
@@ -82,26 +94,38 @@ class CompassRepositoryTest {
             )
         )
 
-        compassRepository.sensorChanged(event)
+        whenever(orientationDataSource.sensorChanged(event)).thenReturn(
+            result
+        )
 
-        Assert.assertNotEquals(result, compassRepository.sensorChanged(event))
+        whenever(
+            compassRepository.sensorChanged(event)
+        ).thenReturn(
+            result
+        )
+
+        compassRepository.sensorChanged(event)
+            .test()
+            .assertValue { result != wrongValue }
+            .dispose()
+        verify(orientationDataSource, times(1)).sensorChanged(event)
     }
 
     @Test
     fun test_update_current_location() {
-        val geoLocation = mock(GeoLocation::class.java)
+        val geoLocation = GeoLocation(1.0, 1.0)
 
         compassRepository.updateCurrentLocation(geoLocation)
 
-        verify(geoLocation, times(1))
+        verify(orientationDataSource, times(1)).updateCurrentLocation(geoLocation)
     }
 
     @Test
     fun test_update_destination_location() {
-        val geoLocation = mock(GeoLocation::class.java)
+        val geoLocation = GeoLocation(1.0, 1.0)
 
         compassRepository.updateDestinationLocation(geoLocation)
 
-        verify(geoLocation, times(1))
+        verify(orientationDataSource, times(1)).updateDestinationLocation(geoLocation)
     }
 }
